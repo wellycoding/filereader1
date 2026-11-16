@@ -1,2 +1,5 @@
 # filereader1
-readfiles or sum idk
+read files, instruction upon running
+
+ill try to see if i can make this program flat out de-bomb zip files
+also please dont use this to hack my acocunt\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
