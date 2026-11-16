@@ -491,110 +491,148 @@ int main() {
 			std::cout << "Invalid file." << std::endl;
 			break;
 		case 'Z':
-			if (inFile.is_open()) {
-				std::cout << "Successfully opened " << FileName << std::endl;
-				while (std::getline(inFile, line)) {
+	if (inFile.is_open()) {
+		std::cout << "Successfully opened " << FileName << std::endl;
+		while (std::getline(inFile, line)) {
+			lines.push_back(line);
+		}
+		inFile.close();
+		skipLine();
+		std::cout << "1. Truncate all data " << std::endl;
+		std::cout << "2. Replace x with y  " << std::endl;
+		std::cout << "3. Add data at character " << std::endl;
+		std::cout << "4. Restore backup " << std::endl;
+		skipLine();
+		std::cout << "Original file contents:\n";
+		for (const auto& l : lines) {
+			std::cout << l << "\n";
+		}
+		skipLine();
+		std::cin >> editChoice;
+		switch (editChoice) {
+		case 1:
+			if (!directoryExists(DirName)) {
+				std::cerr << "Unable to create backup file due to missing parent directory: " << std::string(DirName) << std::endl;
+				skipLine();
+				break;
+			}
+
+			if (!directoryExists(backupLoc)) {
+			    if (_mkdir(backupLoc.c_str()) != 0) {
+			        std::perror(("Unable to create backup directory: " + backupLoc).c_str());
+			    }
+			}
+			while (fileExists(backupLoc + "/backup" + std::to_string(backupIndex))) { backupIndex++; }
+			{
+				std::ifstream srcFile(filepath, std::ios::binary);
+				if (srcFile) {
+				    std::string content((std::istreambuf_iterator<char>(srcFile)), std::istreambuf_iterator<char>());
+				    std::ofstream backupFile(backupLoc + "/backup" + std::to_string(backupIndex), std::ios::binary);
+				    backupFile << content;
+				}
+			}
+			inFile.close();
+			outFile.close();
+			outFile.open(filepath, std::ios::trunc);
+			if (!outFile.is_open()) {
+				std::cerr << "Unable to open " << FileName << std::endl;
+			}
+			outFile.close();
+			std::cout << "\nFile truncated." << std::endl;
+			skipLine();
+			break;
+		case 2:
+			std::cout << "Write in replaced data: ";
+			std::cin >> replacedData;
+			skipLine();
+			std::cout << "Write in new data: ";
+			std::cin >> newData;
+			skipLine();
+			while (std::getline(inFile, line)) {
+				if (line.find(replacedData) != std::string::npos) {
+					line.replace(line.find(replacedData), line.find(replacedData), newData);
+				}
+				else {
+					std::cout << "Unable to find data." << std::endl;
+					skipLine();
+					outFile << newData;
+				}
+			}
+			line.clear();
+			outFile.close();
+			inFile.close();
+			skipLine();
+			break;
+		case 3:
+			std::cout << "Char index: ";
+			std::cin >> addIndex;
+			skipLine();
+			while (std::getline(inFile, line)) {
+				std::cout << line << std::endl;
+				if (!line.empty()) {
 					lines.push_back(line);
 				}
-				inFile.close();
-				skipLine();
-				std::cout << "1. Truncate all data " << std::endl;
-				std::cout << "2. Replace x with y  " << std::endl;
-				std::cout << "3. Add data at character " << std::endl;
-				std::cout << "4. Restore backup " << std::endl;
-				skipLine();
-				std::cout << "Original file contents:\n";
-				for (const auto& l : lines) {
-					std::cout << l << "\n";
+			}
+			for (int v = 0; v < lines.size(); v++) { allLines += lines[v]; }
+			for (int p = 0; p < allLines.size(); p++) {
+				std::cout << allLines[p]; 
+				if (allLines[p] == addIndex) {
+					SetConsoleTextAttribute(hConsole, 10);
 				}
-				skipLine();
-				std::cin >> editChoice;
-				switch (editChoice) {
-				case 1:
-					if (!directoryExists(DirName)) {
-						std::cerr << "Unable to create backup file due to missing parent directory: " << std::string(DirName) << std::endl;
-						skipLine();
-						break;
-					}
-
-					if (!directoryExists(backupLoc)) {
-					    if (_mkdir(backupLoc.c_str()) != 0) {
-					        std::perror(("Unable to create backup directory: " + backupLoc).c_str());
-					    }
-					}
-					while (fileExists(backupLoc + "/backup" + std::to_string(backupIndex))) { backupIndex++; }
-					{
-						std::ifstream srcFile(filepath, std::ios::binary);
-						if (srcFile) {
-						    std::string content((std::istreambuf_iterator<char>(srcFile)), std::istreambuf_iterator<char>());
-						    std::ofstream backupFile(backupLoc + "/backup" + std::to_string(backupIndex), std::ios::binary);
-						    backupFile << content;
-						}
-					}
-
-					outFile.close();
-					outFile.open(filepath, std::ios::trunc);
-					if (!outFile.is_open()) {
-						std::cerr << "Unable to open " << FileName << std::endl;
-					}
-					outFile.close();
-					std::cout << "\nFile truncated." << std::endl;
-					break;
-				case 2:
-					std::cout << "Write in replaced data: ";
-					std::cin >> replacedData;
-					skipLine();
-					std::cout << "Write in new data: ";
-					std::cin >> newData;
-					skipLine();
-					while (std::getline(inFile, line)) {
-						if (line.find(replacedData) != std::string::npos) {
-							line.replace(line.find(replacedData), line.find(replacedData), newData);
-						}
-						else {
-							std::cout << "Unable to find data." << std::endl;
-							skipLine();
-							outFile << newData;
-						}
-					}
-					line.clear();
-					outFile.close();
-					inFile.close();
-					break;
-				case 3:
-					std::cout << "Char index: ";
-					std::cin >> addIndex;
-					skipLine();
-					while (std::getline(inFile, line)) {
-						std::cout << line << std::endl;
-						if (!line.empty()) {
-							lines.push_back(line);
-						}
-					}
-					for (int v = 0; v < lines.size(); v++) { allLines += lines[v]; }
-					for (int p = 0; p < allLines.size(); p++) {
-						std::cout << allLines[p];
-						if (allLines[p] == addIndex) {
-							SetConsoleTextAttribute(hConsole, 10);
-						}
-						else {
-							SetConsoleTextAttribute(hConsole, 7);
-						}
-					}
-					break;
-				case 4:
-					break;
-				default:
-					std::cout << "Exiting..." << std::endl;
-					break;
+				else {
+					SetConsoleTextAttribute(hConsole, 7);
 				}
+			}
+			inFile.close();
+			allLines = " ";
+			skipLine();
+			break;
+		case 4:
+			numFiles = 0;
+			ZeroMemory(&fileData, sizeof(fileData));
+			findCommand = std::string(DirName) + "\\BackUp\\*.*";
+			hFind = FindFirstFileA(findCommand.c_str(), &fileData);
+			if (hFind == INVALID_HANDLE_VALUE) {
+				std::cout << "Folder not found" << std::endl;
 			}
 			else {
-				std::cout << "Unable to open file." << std::endl;
-				skipLine();
+				std::cout << "Files under " + std::string(backupLoc) + ": " << std::endl;
+				do {
+					if (!(fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) { // Checks if the result is a folder
+						numFiles++;
+						std::cout << numFiles << ". " << fileData.cFileName << std::endl;
+						std::string tempFileName = fileData.cFileName;
+						filelist.push_back(tempFileName);
+					}
+				} while (FindNextFileA(hFind, &fileData));
 			}
-
+			ZeroMemory(&fileData, sizeof(fileData));
+			std::cout << "Choose a back up file: " << std::endl;
+			std::cin >> backupFileIndex;
+			if (backupFileIndex <= numFiles) {
+				std::ifstream inFile(filelist[backupFileIndex]);
+				while (std::getline(inFile, line)) {
+					std::cout << "Data in " << filelist[backupFileIndex] << ": " << std::endl;
+					std::cout << line;
+				}
+			}
+			inFile.close();
+			skipLine();
 			break;
+		default:
+			std::cout << "Exiting..." << std::endl;
+			break;
+		}
+	}
+	else {
+		std::cout << "Unable to open file." << std::endl;
+		inFile.close();
+		outFile.close();
+		findCommand = " ";
+		exit = true;
+		skipLine();
+	}
+	break;
 		default:
 			std::cout << "Invalid input." << std::endl;
 			break;
